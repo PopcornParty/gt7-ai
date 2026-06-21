@@ -1,196 +1,242 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>GT7 AI Recommender</title>
+<title>GT7 AI Recommender v7</title>
 
-    <style>
-        body {
-            font-family: Arial;
-            background: #0b0b0b;
-            color: white;
-            text-align: center;
-            margin: 0;
-            padding: 0;
-        }
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: radial-gradient(circle at top, #1a1a1a, #000);
+    color: white;
+}
 
-        .header {
-            background: #111;
-            padding: 20px;
-            font-size: 22px;
-            font-weight: bold;
-        }
+/* HEADER (GT7 STYLE) */
+.header {
+    background: linear-gradient(90deg, #0f0f0f, #1c1c1c);
+    padding: 18px;
+    font-size: 18px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    border-bottom: 1px solid #333;
+}
 
-        .container {
-            margin-top: 40px;
-        }
+/* LAYOUT */
+.layout {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
 
-        .panel {
-            background: #1c1c1c;
-            padding: 20px;
-            width: 320px;
-            margin: auto;
-            border-radius: 12px;
-        }
+/* LEFT PANEL */
+.panel {
+    width: 320px;
+    background: rgba(20,20,20,0.95);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #2a2a2a;
+    box-shadow: 0 0 20px rgba(0,255,136,0.08);
+}
 
-        select, button {
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-            border: none;
-            border-radius: 5px;
-        }
+/* RIGHT PANEL */
+.results {
+    width: 420px;
+}
 
-        button {
-            background: #00ff88;
-            font-weight: bold;
-            cursor: pointer;
-        }
+/* INPUTS */
+select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    background: #111;
+    color: white;
+    border: 1px solid #333;
+    border-radius: 6px;
+}
 
-        button:hover {
-            background: #00cc6a;
-        }
+/* BUTTON */
+button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 15px;
+    background: linear-gradient(90deg, #00ff88, #00cc66);
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 6px;
+    color: black;
+    transition: 0.2s;
+}
 
-        #result {
-            margin-top: 20px;
-            text-align: left;
-        }
+button:hover {
+    transform: scale(1.03);
+}
 
-        .carbox {
-            background: #141414;
-            padding: 10px;
-            margin-top: 10px;
-            border-radius: 8px;
-        }
-    </style>
+/* RESULT CARDS */
+.card {
+    background: rgba(25,25,25,0.95);
+    padding: 14px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    border-left: 3px solid #00ff88;
+    text-align: left;
+    box-shadow: 0 0 10px rgba(0,255,136,0.05);
+}
+
+.score {
+    font-size: 22px;
+    font-weight: bold;
+    color: #00ff88;
+}
+</style>
+
 </head>
 
 <body>
 
-<div class="header">🏎️ GT7 AI Car Recommender v5</div>
+<div class="header">🏎️ GT7 AI RECOMMENDER</div>
 
-<div class="container">
+<div class="layout">
 
 <div class="panel">
 
-    <label>Track Type</label>
-    <select id="track">
-        <option value="tight">Tight / Technical</option>
-        <option value="fast">High Speed</option>
-        <option value="mixed">Mixed</option>
-    </select>
+<label>TRACK</label>
+<select id="track"></select>
 
-    <label>Weather</label>
-    <select id="weather">
-        <option value="dry">Dry</option>
-        <option value="rain">Rain</option>
-    </select>
+<label>WEATHER</label>
+<select id="weather">
+<option value="dry">Dry</option>
+<option value="wet">Wet</option>
+</select>
 
-    <button onclick="recommend()">Get Recommendation</button>
-
-    <div id="result"></div>
+<button onclick="run()">ANALYSE</button>
 
 </div>
+
+<div class="results" id="out"></div>
 
 </div>
 
 <script>
 
-// 🏎️ GT7-style car database (expanded)
-const cars = [
-    {name:"Mazda MX-5", price:30000, speed:5, handling:9, rain:8, drivetrain:"RWD", class:"road"},
-    {name:"Toyota GR Supra", price:60000, speed:7, handling:7, rain:6, drivetrain:"RWD", class:"road"},
-    {name:"Nissan GT-R R35", price:90000, speed:9, handling:6, rain:8, drivetrain:"AWD", class:"road"},
-    {name:"Subaru WRX STI", price:40000, speed:6, handling:7, rain:10, drivetrain:"AWD", class:"road"},
-    {name:"Porsche 911", price:120000, speed:8, handling:8, rain:7, drivetrain:"RWD", class:"road"},
+/////////////////////////////////////////////////////
+// 🏁 TRACK SYSTEM (real GT-style behaviour model)
+/////////////////////////////////////////////////////
 
-    {name:"Ferrari 458", price:250000, speed:10, handling:8, rain:5, drivetrain:"RWD", class:"super"},
-    {name:"Lamborghini Huracan", price:300000, speed:10, handling:7, rain:5, drivetrain:"AWD", class:"super"},
-    {name:"McLaren 720S", price:350000, speed:10, handling:8, rain:6, drivetrain:"RWD", class:"super"},
-
-    {name:"Bugatti Chiron", price:2000000, speed:12, handling:6, rain:5, drivetrain:"AWD", class:"hyper"},
-    {name:"Red Bull X2014", price:3500000, speed:13, handling:10, rain:4, drivetrain:"AWD", class:"race"}
-];
-
-// 🏁 GT7 tracks
 const tracks = {
-    tight: ["Tokyo Expressway", "Deep Forest Raceway", "Brands Hatch"],
-    fast: ["Le Mans", "Daytona", "Spa-Francorchamps"],
-    mixed: ["Suzuka Circuit", "Nürburgring", "Mount Panorama"]
+suzuka:{name:"Suzuka", speed:0.85, corners:1.35, wear:1.2},
+spa:{name:"Spa-Francorchamps", speed:1.05, corners:1.0, wear:1.3},
+monza:{name:"Monza", speed:1.5, corners:0.75, wear:1.1},
+nur:{name:"Nürburgring GP", speed:1.0, corners:1.25, wear:1.4},
+nords:{name:"Nordschleife", speed:0.8, corners:1.6, wear:1.8},
+daytona:{name:"Daytona", speed:1.4, corners:0.8, wear:1.0},
+fuji:{name:"Fuji Speedway", speed:1.2, corners:1.0, wear:1.1},
+redbull:{name:"Red Bull Ring", speed:1.1, corners:1.1, wear:1.1},
+brands:{name:"Brands Hatch", speed:0.9, corners:1.3, wear:1.2},
+tokyo:{name:"Tokyo Expressway", speed:1.25, corners:0.95, wear:1.0},
+laguna:{name:"Laguna Seca", speed:0.75, corners:1.5, wear:1.3},
+inter:{name:"Interlagos", speed:1.1, corners:1.1, wear:1.2},
+bathurst:{name:"Mount Panorama", speed:1.15, corners:1.2, wear:1.4},
+deep:{name:"Deep Forest", speed:0.95, corners:1.25, wear:1.1},
+high:{name:"High Speed Ring", speed:1.45, corners:0.8, wear:1.0}
 };
 
-function recommend() {
+/////////////////////////////////////////////////////
+// 🚗 CAR SYSTEM (GT-style balanced classes)
+/////////////////////////////////////////////////////
 
-    let track = document.getElementById("track").value;
-    let weather = document.getElementById("weather").value;
+const cars = [
+{name:"Mazda MX-5", pp:420, speed:55, corner:95, wet:95, drive:"RWD", type:"road"},
+{name:"Toyota GR Supra", pp:580, speed:75, corner:80, wet:75, drive:"RWD", type:"sports"},
+{name:"Nissan GT-R R35", pp:650, speed:88, corner:78, wet:92, drive:"AWD", type:"sports"},
+{name:"Porsche 911 GT3", pp:720, speed:86, corner:92, wet:88, drive:"RWD", type:"sports"},
+{name:"Ferrari 458 Italia", pp:750, speed:95, corner:88, wet:70, drive:"RWD", type:"super"},
+{name:"Lamborghini Huracan", pp:780, speed:97, corner:84, wet:68, drive:"AWD", type:"super"},
+{name:"McLaren 720S", pp:800, speed:98, corner:90, wet:78, drive:"RWD", type:"super"},
+{name:"GT-R Gr.3", pp:820, speed:92, corner:95, wet:95, drive:"AWD", type:"race"},
+{name:"Red Bull X2014", pp:980, speed:99, corner:99, wet:80, drive:"AWD", type:"prototype"}
+];
 
-    let best = null;
-    let bestScore = -999;
+/////////////////////////////////////////////////////
+// LOAD TRACKS INTO UI
+/////////////////////////////////////////////////////
 
-    let alternatives = [];
+let sel = document.getElementById("track");
 
-    for (let car of cars) {
+for(let k in tracks){
+let o = document.createElement("option");
+o.value = k;
+o.text = tracks[k].name;
+sel.appendChild(o);
+}
 
-        let score = 0;
+/////////////////////////////////////////////////////
+// 🧠 CORE AI ENGINE
+/////////////////////////////////////////////////////
 
-        // base stats
-        score += car.speed * 2;
-        score += car.handling * 2;
+function run(){
 
-        // track logic
-        if (track === "tight") score += car.handling * 3;
-        if (track === "fast") score += car.speed * 3;
-        if (track === "mixed") score += (car.speed + car.handling);
+let t = tracks[document.getElementById("track").value];
+let w = document.getElementById("weather").value;
 
-        // weather
-        if (weather === "rain") score += car.rain * 3;
+let best = null;
+let bestScore = 0;
+let results = [];
 
-        // drivetrain bonus
-        if (weather === "rain" && car.drivetrain === "AWD") score += 5;
+for(let c of cars){
 
-        // PP-style price balancing
-        if (car.price < 50000) score += 3;
-        else if (car.price < 200000) score += 5;
-        else if (car.price < 1000000) score += 4;
-        else score += 2;
+let score = 0;
 
-        car.score = score;
+// PP influence (GT balancing core)
+score += c.pp * 0.07;
 
-        if (score > bestScore) {
-            bestScore = score;
-            best = car;
-        }
+// performance vs track demand
+score += c.speed * t.speed * 0.6;
+score += c.corner * t.corners * 0.6;
 
-        alternatives.push(car);
-    }
+// endurance factor (long tracks matter more)
+score -= t.wear * (100 - c.pp) * 0.01;
 
-    // sort for alternatives
-    alternatives.sort((a,b) => b.score - a.score);
+// wet physics
+if(w === "wet"){
+    score += c.wet * 0.9;
+    if(c.drive === "AWD") score += 6;
+    if(c.drive === "RWD") score -= 2;
+}
 
-    let trackName = tracks[track][Math.floor(Math.random() * tracks[track].length)];
+// class identity (GT logic feel)
+if(c.type === "road") score += 2;
+if(c.type === "sports") score += 4;
+if(c.type === "race") score += 6;
+if(c.type === "prototype") score += 3;
 
-    let html = "";
+// normalize
+score = Math.max(0, Math.min(100, Math.round(score / 2)));
 
-    html += "<h3>🏆 Best Car</h3>";
-    html += "<div class='carbox'><b>" + best.name + "</b><br>Score: " + best.score + "<br>Price: " + best.price + "</div>";
+c.score = score;
+results.push(c);
 
-    html += "<h3>🏁 Suggested Track</h3>";
-    html += "<div class='carbox'>" + trackName + "</div>";
+if(score > bestScore){
+bestScore = score;
+best = c;
+}
+}
 
-    html += "<h3>📊 Why this car?</h3>";
-    html += "<div class='carbox'>";
-    html += "- Matches track type<br>";
-    html += "- Optimised for weather<br>";
-    html += "- Balanced PP (price vs performance)<br>";
-    html += "</div>";
+results.sort((a,b)=>b.score-a.score);
 
-    html += "<h3>🔁 Alternatives</h3>";
+document.getElementById("out").innerHTML = `
+<div class="card"><b>🏆 Best Car:</b><br>${best.name}</div>
+<div class="card"><span class="score">Match: ${best.score}/100</span></div>
+<div class="card"><b>🧠 Why this works:</b><br>
+PP balance + track physics + drivetrain + wet grip simulation</div>
+<div class="card"><b>🔁 Alternatives:</b><br>
+${results[1].name} (${results[1].score})<br>
+${results[2].name} (${results[2].score})<br>
+${results[3].name} (${results[3].score})</div>
+`;
 
-    for (let i = 1; i <= 3; i++) {
-        let c = alternatives[i];
-        html += "<div class='carbox'>" + c.name + " (Score: " + c.score + ")</div>";
-    }
-
-    document.getElementById("result").innerHTML = html;
 }
 
 </script>
