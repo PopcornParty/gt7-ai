@@ -6,31 +6,44 @@
     <style>
         body {
             font-family: Arial;
-            background: #0f0f0f;
+            background: #0b0b0b;
             color: white;
             text-align: center;
-            padding: 30px;
+            margin: 0;
+            padding: 0;
         }
 
-        .box {
+        .header {
+            background: #111;
+            padding: 20px;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .container {
+            margin-top: 40px;
+        }
+
+        .panel {
             background: #1c1c1c;
             padding: 20px;
-            border-radius: 10px;
-            width: 300px;
+            width: 320px;
             margin: auto;
+            border-radius: 12px;
         }
 
         select, button {
             width: 100%;
             padding: 10px;
             margin-top: 10px;
+            border: none;
+            border-radius: 5px;
         }
 
         button {
             background: #00ff88;
-            border: none;
-            cursor: pointer;
             font-weight: bold;
+            cursor: pointer;
         }
 
         button:hover {
@@ -39,74 +52,145 @@
 
         #result {
             margin-top: 20px;
-            font-size: 18px;
+            text-align: left;
+        }
+
+        .carbox {
+            background: #141414;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 8px;
         }
     </style>
 </head>
 
 <body>
 
-    <h1>🏎️ GT7 AI Car Recommender</h1>
+<div class="header">🏎️ GT7 AI Car Recommender v5</div>
 
-    <div class="box">
+<div class="container">
 
-        <label>Track Type</label>
-        <select id="track">
-            <option value="tight">Tight / Technical</option>
-            <option value="fast">Fast / High Speed</option>
-        </select>
+<div class="panel">
 
-        <label>Weather</label>
-        <select id="weather">
-            <option value="dry">Dry</option>
-            <option value="rain">Rain</option>
-        </select>
+    <label>Track Type</label>
+    <select id="track">
+        <option value="tight">Tight / Technical</option>
+        <option value="fast">High Speed</option>
+        <option value="mixed">Mixed</option>
+    </select>
 
-        <button onclick="recommend()">Get Recommendation</button>
+    <label>Weather</label>
+    <select id="weather">
+        <option value="dry">Dry</option>
+        <option value="rain">Rain</option>
+    </select>
 
-        <div id="result"></div>
+    <button onclick="recommend()">Get Recommendation</button>
 
-    </div>
+    <div id="result"></div>
+
+</div>
+
+</div>
 
 <script>
 
+// 🏎️ GT7-style car database (expanded)
 const cars = [
-    {name:"Nissan GT-R", speed:8, handling:6, rain:7},
-    {name:"Mazda MX-5", speed:5, handling:9, rain:8},
-    {name:"Toyota Supra", speed:7, handling:7, rain:6},
-    {name:"Subaru WRX", speed:6, handling:7, rain:9}
+    {name:"Mazda MX-5", price:30000, speed:5, handling:9, rain:8, drivetrain:"RWD", class:"road"},
+    {name:"Toyota GR Supra", price:60000, speed:7, handling:7, rain:6, drivetrain:"RWD", class:"road"},
+    {name:"Nissan GT-R R35", price:90000, speed:9, handling:6, rain:8, drivetrain:"AWD", class:"road"},
+    {name:"Subaru WRX STI", price:40000, speed:6, handling:7, rain:10, drivetrain:"AWD", class:"road"},
+    {name:"Porsche 911", price:120000, speed:8, handling:8, rain:7, drivetrain:"RWD", class:"road"},
+
+    {name:"Ferrari 458", price:250000, speed:10, handling:8, rain:5, drivetrain:"RWD", class:"super"},
+    {name:"Lamborghini Huracan", price:300000, speed:10, handling:7, rain:5, drivetrain:"AWD", class:"super"},
+    {name:"McLaren 720S", price:350000, speed:10, handling:8, rain:6, drivetrain:"RWD", class:"super"},
+
+    {name:"Bugatti Chiron", price:2000000, speed:12, handling:6, rain:5, drivetrain:"AWD", class:"hyper"},
+    {name:"Red Bull X2014", price:3500000, speed:13, handling:10, rain:4, drivetrain:"AWD", class:"race"}
 ];
+
+// 🏁 GT7 tracks
+const tracks = {
+    tight: ["Tokyo Expressway", "Deep Forest Raceway", "Brands Hatch"],
+    fast: ["Le Mans", "Daytona", "Spa-Francorchamps"],
+    mixed: ["Suzuka Circuit", "Nürburgring", "Mount Panorama"]
+};
 
 function recommend() {
 
     let track = document.getElementById("track").value;
     let weather = document.getElementById("weather").value;
 
-    let bestCar = "";
-    let bestScore = 0;
+    let best = null;
+    let bestScore = -999;
+
+    let alternatives = [];
 
     for (let car of cars) {
 
-        let score = car.speed + car.handling;
+        let score = 0;
 
-        if (track === "tight") {
-            score += car.handling * 2;
-        } else {
-            score += car.speed * 2;
-        }
+        // base stats
+        score += car.speed * 2;
+        score += car.handling * 2;
 
-        if (weather === "rain") {
-            score += car.rain * 2;
-        }
+        // track logic
+        if (track === "tight") score += car.handling * 3;
+        if (track === "fast") score += car.speed * 3;
+        if (track === "mixed") score += (car.speed + car.handling);
+
+        // weather
+        if (weather === "rain") score += car.rain * 3;
+
+        // drivetrain bonus
+        if (weather === "rain" && car.drivetrain === "AWD") score += 5;
+
+        // PP-style price balancing
+        if (car.price < 50000) score += 3;
+        else if (car.price < 200000) score += 5;
+        else if (car.price < 1000000) score += 4;
+        else score += 2;
+
+        car.score = score;
 
         if (score > bestScore) {
             bestScore = score;
-            bestCar = car.name;
+            best = car;
         }
+
+        alternatives.push(car);
     }
 
-    document.getElementById("result").innerHTML =
-        "🏆 Best Car: " + bestCar + "<br>⭐ Score: " + bestScore;
+    // sort for alternatives
+    alternatives.sort((a,b) => b.score - a.score);
+
+    let trackName = tracks[track][Math.floor(Math.random() * tracks[track].length)];
+
+    let html = "";
+
+    html += "<h3>🏆 Best Car</h3>";
+    html += "<div class='carbox'><b>" + best.name + "</b><br>Score: " + best.score + "<br>Price: " + best.price + "</div>";
+
+    html += "<h3>🏁 Suggested Track</h3>";
+    html += "<div class='carbox'>" + trackName + "</div>";
+
+    html += "<h3>📊 Why this car?</h3>";
+    html += "<div class='carbox'>";
+    html += "- Matches track type<br>";
+    html += "- Optimised for weather<br>";
+    html += "- Balanced PP (price vs performance)<br>";
+    html += "</div>";
+
+    html += "<h3>🔁 Alternatives</h3>";
+
+    for (let i = 1; i <= 3; i++) {
+        let c = alternatives[i];
+        html += "<div class='carbox'>" + c.name + " (Score: " + c.score + ")</div>";
+    }
+
+    document.getElementById("result").innerHTML = html;
 }
 
 </script>
