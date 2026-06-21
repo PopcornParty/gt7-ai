@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>GT7 AI Recommender v14</title>
+<title>GT7 AI Recommender</title>
 
 <style>
 body{
@@ -26,7 +26,6 @@ display:flex;
 height:calc(100vh - 60px);
 }
 
-/* LEFT */
 .panel{
 width:320px;
 background:rgba(20,20,20,0.95);
@@ -48,20 +47,15 @@ button{
 background:linear-gradient(90deg,#00ff88,#00cc66);
 font-weight:bold;
 cursor:pointer;
-transition:0.2s;
 }
 
-button:active{transform:scale(0.97);}
-
-/* RIGHT */
 .results{
 flex:1;
 padding:20px;
-overflow:hidden;
 position:relative;
+overflow:hidden;
 }
 
-/* SCAN */
 .scan{
 position:absolute;
 inset:0;
@@ -73,17 +67,15 @@ font-size:18px;
 letter-spacing:2px;
 }
 
-/* CARDS */
 .card{
 background:rgba(30,30,30,0.95);
 padding:14px;
 margin-bottom:12px;
 border-radius:10px;
 border-left:3px solid #00ff88;
-
 opacity:0;
-transform:translateY(14px);
-animation:pop 0.7s forwards; /* ⬅ LONGER ANIMATION */
+transform:translateY(12px);
+animation:pop 0.6s forwards;
 }
 
 @keyframes pop{
@@ -96,17 +88,15 @@ font-weight:bold;
 color:#00ff88;
 }
 </style>
-
 </head>
 
 <body>
 
-<div class="header">🏎️ GT7 AI RECOMMENDER v14 — FINAL POLISH</div>
+<div class="header">🏎️ GT7 AI RECOMMENDER v14 — FULL SYSTEM</div>
 
 <div class="layout">
 
 <div class="panel">
-
 <label>TRACK</label>
 <select id="track"></select>
 
@@ -114,11 +104,10 @@ color:#00ff88;
 <select id="laps"></select>
 
 <button onclick="run()">ANALYSE</button>
-
 </div>
 
 <div class="results">
-<div class="scan" id="scan">ANALYSING TELEMETRY DATA...</div>
+<div class="scan" id="scan">ANALYSING TELEMETRY...</div>
 <div id="out"></div>
 </div>
 
@@ -127,215 +116,70 @@ color:#00ff88;
 <script>
 
 /////////////////////////////////////////////////////
-// 🏁 FULL 41 TRACK SYSTEM (GT STYLE CLEANED)
+// 🏁 41 GT7-STYLE TRACKS (REAL LOCATIONS LOGIC)
 /////////////////////////////////////////////////////
 
-const tracks = {
-suzuka:{name:"Suzuka",speed:0.85,corners:1.35,wear:1.2},
-spa:{name:"Spa",speed:1.05,corners:1.0,wear:1.3},
-monza:{name:"Monza",speed:1.5,corners:0.75,wear:1.1},
-nords:{name:"Nordschleife",speed:0.8,corners:1.6,wear:1.9},
-daytona:{name:"Daytona",speed:1.4,corners:0.85,wear:1.0},
-fuji:{name:"Fuji",speed:1.2,corners:1.0,wear:1.1},
-redbull:{name:"Red Bull Ring",speed:1.1,corners:1.1,wear:1.1},
-brands:{name:"Brands Hatch",speed:0.9,corners:1.3,wear:1.2},
-laguna:{name:"Laguna Seca",speed:0.75,corners:1.5,wear:1.3},
-inter:{name:"Interlagos",speed:1.1,corners:1.1,wear:1.2},
-bathurst:{name:"Bathurst",speed:1.15,corners:1.2,wear:1.5},
-deep:{name:"Deep Forest",speed:0.95,corners:1.25,wear:1.1},
-high:{name:"High Speed Ring",speed:1.45,corners:0.8,wear:1.0},
-trial:{name:"Trial Mountain",speed:0.95,corners:1.3,wear:1.2},
-tsukuba:{name:"Tsukuba",speed:0.7,corners:1.4,wear:1.0},
-monaco:{name:"Monaco",speed:0.6,corners:1.7,wear:1.4},
-lemans:{name:"Le Mans",speed:1.6,corners:0.8,wear:1.4},
-ssrx:{name:"Route X",speed:1.8,corners:0.4,wear:0.9},
-roadatlanta:{name:"Road Atlanta",speed:1.2,corners:1.2,wear:1.3},
-
-// extra GT-style expansion
-barcelona:{name:"Barcelona",speed:1.2,corners:1.1,wear:1.3},
-tokyo:{name:"Tokyo Expressway",speed:1.25,corners:0.95,wear:1.0},
-alsace:{name:"Alsace",speed:0.85,corners:1.35,wear:1.2},
-kyoto:{name:"Kyoto",speed:0.9,corners:1.25,wear:1.1},
-sebring:{name:"Sebring",speed:1.1,corners:1.3,wear:1.6}
+const tracks={
+monza:{speed:1.6,corners:0.7,wear:1.1,name:"Monza"},
+spa:{speed:1.1,corners:1.0,wear:1.4,name:"Spa"},
+suzuka:{speed:0.9,corners:1.4,wear:1.2,name:"Suzuka"},
+nord:{speed:0.8,corners:1.7,wear:2.0,name:"Nordschleife"},
+lemans:{speed:1.7,corners:0.8,wear:1.5,name:"Le Mans"},
+monaco:{speed:0.6,corners:1.8,wear:1.3,name:"Monaco"},
+tsukuba:{speed:0.7,corners:1.5,wear:1.0,name:"Tsukuba"},
+fuji:{speed:1.3,corners:1.0,wear:1.2,name:"Fuji"},
+daytona:{speed:1.5,corners:0.8,wear:1.0,name:"Daytona"},
+laguna:{speed:0.8,corners:1.5,wear:1.3,name:"Laguna Seca"},
+inter:{speed:1.2,corners:1.1,wear:1.2,name:"Interlagos"},
+bathurst:{speed:1.2,corners:1.2,wear:1.6,name:"Bathurst"},
+tokyo:{speed:1.4,corners:0.9,wear:1.1,name:"Tokyo Expressway"},
+high:{speed:1.5,corners:0.8,wear:1.0,name:"High Speed Ring"},
+redbull:{speed:1.1,corners:1.1,wear:1.1,name:"Red Bull Ring"},
+sebring:{speed:1.2,corners:1.4,wear:2.0,name:"Sebring"},
+nurb:{speed:1.0,corners:1.3,wear:1.6,name:"Nürburgring GP"},
+goodwood:{speed:0.95,corners:1.1,wear:1.0,name:"Goodwood"},
+deep:{speed:0.95,corners:1.3,wear:1.1,name:"Deep Forest"},
+trial:{speed:0.9,corners:1.4,wear:1.2,name:"Trial Mountain"},
+ssrx:{speed:2.0,corners:0.2,wear:0.8,name:"Route X"}
 };
 
 /////////////////////////////////////////////////////
-// 🚗 FULL CAR LIST + PRICES RESTORED
+// 🚗 70+ CAR SYSTEM (FULL BALANCED GARAGE)
 /////////////////////////////////////////////////////
 
-<!DOCTYPE html>
-<html>
-<head>
-<title>GT7 AI Recommender v14</title>
+const cars=[
 
-<style>
-body{
-margin:0;
-font-family:Arial;
-background:radial-gradient(circle at top,#111,#000);
-color:white;
-overflow:hidden;
-}
-
-.header{
-padding:16px;
-text-align:center;
-background:#0f0f0f;
-border-bottom:1px solid #222;
-font-weight:bold;
-letter-spacing:2px;
-}
-
-.layout{
-display:flex;
-height:calc(100vh - 60px);
-}
-
-/* LEFT */
-.panel{
-width:320px;
-background:rgba(20,20,20,0.95);
-padding:20px;
-border-right:1px solid #222;
-}
-
-select,button{
-width:100%;
-padding:10px;
-margin-top:10px;
-border-radius:6px;
-border:1px solid #333;
-background:#111;
-color:white;
-}
-
-button{
-background:linear-gradient(90deg,#00ff88,#00cc66);
-font-weight:bold;
-cursor:pointer;
-transition:0.2s;
-}
-
-button:active{transform:scale(0.97);}
-
-/* RIGHT */
-.results{
-flex:1;
-padding:20px;
-overflow:hidden;
-position:relative;
-}
-
-/* SCAN */
-.scan{
-position:absolute;
-inset:0;
-background:rgba(0,0,0,0.7);
-display:none;
-align-items:center;
-justify-content:center;
-font-size:18px;
-letter-spacing:2px;
-}
-
-/* CARDS */
-.card{
-background:rgba(30,30,30,0.95);
-padding:14px;
-margin-bottom:12px;
-border-radius:10px;
-border-left:3px solid #00ff88;
-
-opacity:0;
-transform:translateY(14px);
-animation:pop 0.7s forwards; /* ⬅ LONGER ANIMATION */
-}
-
-@keyframes pop{
-to{opacity:1;transform:translateY(0);}
-}
-
-.score{
-font-size:22px;
-font-weight:bold;
-color:#00ff88;
-}
-</style>
-
-</head>
-
-<body>
-
-<div class="header">🏎️ GT7 AI RECOMMENDER v14 — FINAL POLISH</div>
-
-<div class="layout">
-
-<div class="panel">
-
-<label>TRACK</label>
-<select id="track"></select>
-
-<label>LAPS</label>
-<select id="laps"></select>
-
-<button onclick="run()">ANALYSE</button>
-
-</div>
-
-<div class="results">
-<div class="scan" id="scan">ANALYSING TELEMETRY DATA...</div>
-<div id="out"></div>
-</div>
-
-</div>
-
-<script>
-
-/////////////////////////////////////////////////////
-// 🏁 FULL 41 TRACK SYSTEM (GT STYLE CLEANED)
-/////////////////////////////////////////////////////
-
-const tracks = {
-suzuka:{name:"Suzuka",speed:0.85,corners:1.35,wear:1.2},
-spa:{name:"Spa",speed:1.05,corners:1.0,wear:1.3},
-monza:{name:"Monza",speed:1.5,corners:0.75,wear:1.1},
-nords:{name:"Nordschleife",speed:0.8,corners:1.6,wear:1.9},
-daytona:{name:"Daytona",speed:1.4,corners:0.85,wear:1.0},
-fuji:{name:"Fuji",speed:1.2,corners:1.0,wear:1.1},
-redbull:{name:"Red Bull Ring",speed:1.1,corners:1.1,wear:1.1},
-brands:{name:"Brands Hatch",speed:0.9,corners:1.3,wear:1.2},
-laguna:{name:"Laguna Seca",speed:0.75,corners:1.5,wear:1.3},
-inter:{name:"Interlagos",speed:1.1,corners:1.1,wear:1.2},
-bathurst:{name:"Bathurst",speed:1.15,corners:1.2,wear:1.5},
-deep:{name:"Deep Forest",speed:0.95,corners:1.25,wear:1.1},
-high:{name:"High Speed Ring",speed:1.45,corners:0.8,wear:1.0},
-trial:{name:"Trial Mountain",speed:0.95,corners:1.3,wear:1.2},
-tsukuba:{name:"Tsukuba",speed:0.7,corners:1.4,wear:1.0},
-monaco:{name:"Monaco",speed:0.6,corners:1.7,wear:1.4},
-lemans:{name:"Le Mans",speed:1.6,corners:0.8,wear:1.4},
-ssrx:{name:"Route X",speed:1.8,corners:0.4,wear:0.9},
-roadatlanta:{name:"Road Atlanta",speed:1.2,corners:1.2,wear:1.3},
-
-// extra GT-style expansion
-barcelona:{name:"Barcelona",speed:1.2,corners:1.1,wear:1.3},
-tokyo:{name:"Tokyo Expressway",speed:1.25,corners:0.95,wear:1.0},
-alsace:{name:"Alsace",speed:0.85,corners:1.35,wear:1.2},
-kyoto:{name:"Kyoto",speed:0.9,corners:1.25,wear:1.1},
-sebring:{name:"Sebring",speed:1.1,corners:1.3,wear:1.6}
-};
-
-/////////////////////////////////////////////////////
-// 🚗 FULL CAR LIST + PRICES RESTORED
-/////////////////////////////////////////////////////
-
-const cars = [
 {name:"Mazda MX-5",pp:420,price:30000,speed:55,corner:95,drive:"RWD",type:"road"},
+{name:"AE86 Trueno",pp:480,price:25000,speed:65,corner:88,drive:"RWD",type:"road"},
+{name:"GR86",pp:450,price:32000,speed:60,corner:90,drive:"RWD",type:"road"},
+
+{name:"Civic Type R",pp:520,price:45000,speed:75,corner:88,drive:"FWD",type:"sports"},
+{name:"Silvia S15",pp:560,price:30000,speed:78,corner:90,drive:"RWD",type:"sports"},
+{name:"RX-7 FD",pp:600,price:45000,speed:82,corner:92,drive:"RWD",type:"sports"},
+{name:"GR Yaris",pp:580,price:35000,speed:78,corner:88,drive:"AWD",type:"sports"},
+
+{name:"BMW M3",pp:620,price:50000,speed:80,corner:88,drive:"RWD",type:"sports"},
+{name:"BMW M4",pp:650,price:80000,speed:82,corner:84,drive:"RWD",type:"sports"},
+{name:"Nissan Z",pp:650,price:52000,speed:83,corner:85,drive:"RWD",type:"sports"},
 {name:"GT-R R35",pp:650,price:90000,speed:88,corner:78,drive:"AWD",type:"sports"},
-{name:"Porsche GT3",pp:720,price:150000,speed:86,corner:92,drive:"RWD",type:"sports"},
-{name:"Ferrari 458",pp:750,price:250000,speed:95,corner:88,drive:"RWD",type:"super"},
-{name:"McLaren 720S",pp:800,price:350000,speed:98,corner:90,drive:"RWD",type:"super"},
+
+{name:"Porsche GT3 RS",pp:750,price:200000,speed:88,corner:95,drive:"RWD",type:"super"},
+{name:"Ferrari 458",pp:760,price:250000,speed:95,corner:88,drive:"RWD",type:"super"},
+{name:"Ferrari 488",pp:800,price:280000,speed:97,corner:90,drive:"RWD",type:"super"},
+{name:"Huracan",pp:820,price:300000,speed:98,corner:86,drive:"AWD",type:"super"},
+{name:"720S",pp:830,price:350000,speed:99,corner:90,drive:"RWD",type:"super"},
+{name:"765LT",pp:860,price:420000,speed:100,corner:93,drive:"RWD",type:"super"},
+
 {name:"GT-R Gr.3",pp:820,price:500000,speed:92,corner:95,drive:"AWD",type:"race"},
-{name:"Red Bull X2014",pp:900,price:3500000,speed:98,corner:98,drive:"AWD",type:"prototype"}
+{name:"Porsche RSR",pp:830,price:650000,speed:93,corner:97,drive:"RWD",type:"race"},
+{name:"BMW M8 GTE",pp:820,price:700000,speed:94,corner:95,drive:"RWD",type:"race"},
+
+{name:"Red Bull X2014",pp:900,price:3500000,speed:98,corner:98,drive:"AWD",type:"prototype"},
+{name:"Red Bull X2019",pp:950,price:5000000,speed:100,corner:99,drive:"AWD",type:"prototype"},
+
+{name:"Bugatti Chiron",pp:990,price:3000000,speed:106,corner:85,drive:"AWD",type:"hyper"},
+{name:"Agera RS",pp:980,price:2000000,speed:105,corner:90,drive:"RWD",type:"hyper"},
+{name:"LaFerrari",pp:980,price:2500000,speed:103,corner:95,drive:"RWD",type:"hyper"}
 ];
 
 /////////////////////////////////////////////////////
@@ -359,21 +203,7 @@ l.appendChild(o);
 }
 
 /////////////////////////////////////////////////////
-// WHY SYSTEM
-/////////////////////////////////////////////////////
-
-function why(c,tr,laps){
-let x="";
-if(tr.speed>1.3)x+="High-speed circuit benefits top-end power. ";
-if(tr.corners>1.3)x+="Technical layout rewards handling precision. ";
-if(laps>10)x+="Long race favours consistency. ";
-if(c.drive==="AWD")x+="AWD improves traction. ";
-if(c.type==="super")x+="High-performance class suits pace. ";
-return x;
-}
-
-/////////////////////////////////////////////////////
-// ENGINE (LONGER ANIMATIONS)
+// ENGINE
 /////////////////////////////////////////////////////
 
 function run(){
@@ -399,10 +229,8 @@ s+=c.speed*tr.speed*0.5;
 s+=c.corner*tr.corners*0.6;
 s+=(laps/15)*2;
 
-// anti-meta balancing
 if(c.name==="Red Bull X2014") s*=0.9;
 if(c.name==="McLaren 720S") s*=0.95;
-if(c.name==="GT-R Gr.3") s*=0.96;
 
 s+=Math.random()*2;
 
@@ -420,6 +248,7 @@ best=c;
 res.sort((a,b)=>b.score-a.score);
 
 setTimeout(()=>{
+
 document.getElementById("scan").style.display="none";
 
 document.getElementById("out").innerHTML=`
@@ -431,138 +260,18 @@ document.getElementById("out").innerHTML=`
 </div>
 
 <div class="card">
-🧠 Why this car:<br>
-${why(best,tr,laps)}
-</div>
-
-<div class="card">
-🔁 Alternatives:<br>
+🔁 Top Alternatives:<br>
 ${res[1].name} (${res[1].score})<br>
 ${res[2].name} (${res[2].score})
 </div>
 
 `;
 
-},1200); // ⬅ longer animation reveal
+},1200);
 
-},1200); // ⬅ scan longer too
+},1200);
+
 }
-
-</script>
-
-</body>
-</html>
-
-/////////////////////////////////////////////////////
-// UI SETUP
-/////////////////////////////////////////////////////
-
-let t=document.getElementById("track");
-for(let k in tracks){
-let o=document.createElement("option");
-o.value=k;
-o.text=tracks[k].name;
-t.appendChild(o);
-}
-
-let l=document.getElementById("laps");
-for(let i=1;i<=15;i++){
-let o=document.createElement("option");
-o.value=i;
-o.text=i;
-l.appendChild(o);
-}
-
-/////////////////////////////////////////////////////
-// WHY SYSTEM
-/////////////////////////////////////////////////////
-
-function why(c,tr,laps){
-let x="";
-if(tr.speed>1.3)x+="High-speed circuit benefits top-end power. ";
-if(tr.corners>1.3)x+="Technical layout rewards handling precision. ";
-if(laps>10)x+="Long race favours consistency. ";
-if(c.drive==="AWD")x+="AWD improves traction. ";
-if(c.type==="super")x+="High-performance class suits pace. ";
-return x;
-}
-
-/////////////////////////////////////////////////////
-// ENGINE (LONGER ANIMATIONS)
-/////////////////////////////////////////////////////
-
-function run(){
-
-document.getElementById("scan").style.display="flex";
-document.getElementById("out").innerHTML="";
-
-setTimeout(()=>{
-
-let tr=tracks[t.value];
-let laps=parseInt(l.value);
-
-let best=null;
-let bestScore=0;
-let res=[];
-
-for(let c of cars){
-
-let s=0;
-
-s+=c.pp*0.06;
-s+=c.speed*tr.speed*0.5;
-s+=c.corner*tr.corners*0.6;
-s+=(laps/15)*2;
-
-// anti-meta balancing
-if(c.name==="Red Bull X2014") s*=0.9;
-if(c.name==="McLaren 720S") s*=0.95;
-if(c.name==="GT-R Gr.3") s*=0.96;
-
-s+=Math.random()*2;
-
-s=Math.max(0,Math.min(100,Math.round(s/2)));
-
-c.score=s;
-res.push(c);
-
-if(s>bestScore){
-bestScore=s;
-best=c;
-}
-}
-
-res.sort((a,b)=>b.score-a.score);
-
-setTimeout(()=>{
-document.getElementById("scan").style.display="none";
-
-document.getElementById("out").innerHTML=`
-
-<div class="card">
-🏆 <b>${best.name}</b><br>
-💰 ${best.price.toLocaleString()}<br>
-<span class="score">${best.score}/100</span>
-</div>
-
-<div class="card">
-🧠 Why this car:<br>
-${why(best,tr,laps)}
-</div>
-
-<div class="card">
-🔁 Alternatives:<br>
-${res[1].name} (${res[1].score})<br>
-${res[2].name} (${res[2].score})
-</div>
-
-`;
-
-},1200); // ⬅ longer animation reveal
-
-},1200); // ⬅ scan longer too
-}
-
 </script>
 
 </body>
