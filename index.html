@@ -2,9 +2,114 @@
 <html>
 <head>
     <title>GT7 AI Recommender</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #0f0f0f;
+            color: white;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .box {
+            background: #1c1c1c;
+            padding: 20px;
+            border-radius: 10px;
+            width: 300px;
+            margin: auto;
+        }
+
+        select, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        button {
+            background: #00ff88;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #00cc6a;
+        }
+
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    </style>
 </head>
+
 <body>
-    <h1>GT7 AI Car Recommender</h1>
-    <p>It works 🚗🔥</p>
+
+    <h1>🏎️ GT7 AI Car Recommender</h1>
+
+    <div class="box">
+
+        <label>Track Type</label>
+        <select id="track">
+            <option value="tight">Tight / Technical</option>
+            <option value="fast">Fast / High Speed</option>
+        </select>
+
+        <label>Weather</label>
+        <select id="weather">
+            <option value="dry">Dry</option>
+            <option value="rain">Rain</option>
+        </select>
+
+        <button onclick="recommend()">Get Recommendation</button>
+
+        <div id="result"></div>
+
+    </div>
+
+<script>
+
+const cars = [
+    {name:"Nissan GT-R", speed:8, handling:6, rain:7},
+    {name:"Mazda MX-5", speed:5, handling:9, rain:8},
+    {name:"Toyota Supra", speed:7, handling:7, rain:6},
+    {name:"Subaru WRX", speed:6, handling:7, rain:9}
+];
+
+function recommend() {
+
+    let track = document.getElementById("track").value;
+    let weather = document.getElementById("weather").value;
+
+    let bestCar = "";
+    let bestScore = 0;
+
+    for (let car of cars) {
+
+        let score = car.speed + car.handling;
+
+        if (track === "tight") {
+            score += car.handling * 2;
+        } else {
+            score += car.speed * 2;
+        }
+
+        if (weather === "rain") {
+            score += car.rain * 2;
+        }
+
+        if (score > bestScore) {
+            bestScore = score;
+            bestCar = car.name;
+        }
+    }
+
+    document.getElementById("result").innerHTML =
+        "🏆 Best Car: " + bestCar + "<br>⭐ Score: " + bestScore;
+}
+
+</script>
+
 </body>
 </html>
