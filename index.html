@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>GT7 AI Recommender v7</title>
+<title>GT7 AI Recommender v8</title>
 
 <style>
 body {
@@ -11,7 +11,7 @@ body {
     color: white;
 }
 
-/* HEADER (GT7 STYLE) */
+/* HEADER */
 .header {
     background: linear-gradient(90deg, #0f0f0f, #1c1c1c);
     padding: 18px;
@@ -19,6 +19,7 @@ body {
     font-weight: bold;
     letter-spacing: 2px;
     border-bottom: 1px solid #333;
+    text-align: center;
 }
 
 /* LAYOUT */
@@ -74,7 +75,7 @@ button:hover {
     transform: scale(1.03);
 }
 
-/* RESULT CARDS */
+/* CARDS */
 .card {
     background: rgba(25,25,25,0.95);
     padding: 14px;
@@ -82,7 +83,6 @@ button:hover {
     border-radius: 10px;
     border-left: 3px solid #00ff88;
     text-align: left;
-    box-shadow: 0 0 10px rgba(0,255,136,0.05);
 }
 
 .score {
@@ -96,7 +96,7 @@ button:hover {
 
 <body>
 
-<div class="header">🏎️ GT7 AI RECOMMENDER</div>
+<div class="header">🏎️ GT7 AI RECOMMENDER v8</div>
 
 <div class="layout">
 
@@ -121,9 +121,9 @@ button:hover {
 
 <script>
 
-/////////////////////////////////////////////////////
-// 🏁 TRACK SYSTEM (real GT-style behaviour model)
-/////////////////////////////////////////////////////
+//////////////////////////////
+// 🏁 TRACK SYSTEM
+//////////////////////////////
 
 const tracks = {
 suzuka:{name:"Suzuka", speed:0.85, corners:1.35, wear:1.2},
@@ -143,25 +143,25 @@ deep:{name:"Deep Forest", speed:0.95, corners:1.25, wear:1.1},
 high:{name:"High Speed Ring", speed:1.45, corners:0.8, wear:1.0}
 };
 
-/////////////////////////////////////////////////////
-// 🚗 CAR SYSTEM (GT-style balanced classes)
-/////////////////////////////////////////////////////
+//////////////////////////////
+// 🚗 CAR SYSTEM
+//////////////////////////////
 
 const cars = [
-{name:"Mazda MX-5", pp:420, speed:55, corner:95, wet:95, drive:"RWD", type:"road"},
-{name:"Toyota GR Supra", pp:580, speed:75, corner:80, wet:75, drive:"RWD", type:"sports"},
-{name:"Nissan GT-R R35", pp:650, speed:88, corner:78, wet:92, drive:"AWD", type:"sports"},
-{name:"Porsche 911 GT3", pp:720, speed:86, corner:92, wet:88, drive:"RWD", type:"sports"},
-{name:"Ferrari 458 Italia", pp:750, speed:95, corner:88, wet:70, drive:"RWD", type:"super"},
-{name:"Lamborghini Huracan", pp:780, speed:97, corner:84, wet:68, drive:"AWD", type:"super"},
-{name:"McLaren 720S", pp:800, speed:98, corner:90, wet:78, drive:"RWD", type:"super"},
-{name:"GT-R Gr.3", pp:820, speed:92, corner:95, wet:95, drive:"AWD", type:"race"},
-{name:"Red Bull X2014", pp:980, speed:99, corner:99, wet:80, drive:"AWD", type:"prototype"}
+{name:"Mazda MX-5", pp:420, price:30000, speed:55, corner:95, wet:95, drive:"RWD", type:"road"},
+{name:"Toyota GR Supra", pp:580, price:60000, speed:75, corner:80, wet:75, drive:"RWD", type:"sports"},
+{name:"Nissan GT-R R35", pp:650, price:90000, speed:88, corner:78, wet:92, drive:"AWD", type:"sports"},
+{name:"Porsche 911 GT3", pp:720, price:150000, speed:86, corner:92, wet:88, drive:"RWD", type:"sports"},
+{name:"Ferrari 458 Italia", pp:750, price:250000, speed:95, corner:88, wet:70, drive:"RWD", type:"super"},
+{name:"Lamborghini Huracan", pp:780, price:300000, speed:97, corner:84, wet:68, drive:"AWD", type:"super"},
+{name:"McLaren 720S", pp:800, price:350000, speed:98, corner:90, wet:78, drive:"RWD", type:"super"},
+{name:"GT-R Gr.3", pp:820, price:500000, speed:92, corner:95, wet:95, drive:"AWD", type:"race"},
+{name:"Red Bull X2014", pp:980, price:3500000, speed:99, corner:99, wet:80, drive:"AWD", type:"prototype"}
 ];
 
-/////////////////////////////////////////////////////
-// LOAD TRACKS INTO UI
-/////////////////////////////////////////////////////
+//////////////////////////////
+// UI TRACK LOADING
+//////////////////////////////
 
 let sel = document.getElementById("track");
 
@@ -172,9 +172,19 @@ o.text = tracks[k].name;
 sel.appendChild(o);
 }
 
-/////////////////////////////////////////////////////
-// 🧠 CORE AI ENGINE
-/////////////////////////////////////////////////////
+//////////////////////////////
+// 💰 FORMAT MONEY
+//////////////////////////////
+
+function money(x){
+if(x >= 1000000) return (x/1000000).toFixed(1) + "m";
+if(x >= 1000) return (x/1000).toFixed(0) + "k";
+return x;
+}
+
+//////////////////////////////
+// 🧠 AI ENGINE
+//////////////////////////////
 
 function run(){
 
@@ -189,24 +199,24 @@ for(let c of cars){
 
 let score = 0;
 
-// PP influence (GT balancing core)
+// PP system
 score += c.pp * 0.07;
 
-// performance vs track demand
+// track physics
 score += c.speed * t.speed * 0.6;
 score += c.corner * t.corners * 0.6;
 
-// endurance factor (long tracks matter more)
+// endurance
 score -= t.wear * (100 - c.pp) * 0.01;
 
-// wet physics
+// wet system
 if(w === "wet"){
     score += c.wet * 0.9;
     if(c.drive === "AWD") score += 6;
     if(c.drive === "RWD") score -= 2;
 }
 
-// class identity (GT logic feel)
+// class bias
 if(c.type === "road") score += 2;
 if(c.type === "sports") score += 4;
 if(c.type === "race") score += 6;
@@ -226,15 +236,52 @@ best = c;
 
 results.sort((a,b)=>b.score-a.score);
 
+//////////////////////////////
+// 🧠 PERSONALISED WHY SYSTEM
+//////////////////////////////
+
+function why(car){
+let text = "";
+
+if(car.drive === "AWD" && w === "wet"){
+text += "AWD gives strong wet grip advantage. ";
+}
+
+if(t.speed > 1.2){
+text += "High-speed sections match its straight-line performance. ";
+}
+
+if(t.corners > 1.2){
+text += "Technical corners suit its handling balance. ";
+}
+
+if(car.pp > 750){
+text += "High PP helps maintain pace across full race distance. ";
+}
+
+if(car.price > 1000000){
+text += "Premium performance tier provides top-end stability. ";
+}
+
+return text;
+}
+
+//////////////////////////////
+// OUTPUT
+//////////////////////////////
+
 document.getElementById("out").innerHTML = `
 <div class="card"><b>🏆 Best Car:</b><br>${best.name}</div>
-<div class="card"><span class="score">Match: ${best.score}/100</span></div>
-<div class="card"><b>🧠 Why this works:</b><br>
-PP balance + track physics + drivetrain + wet grip simulation</div>
+<div class="card"><span class="score">${best.score}/100 Match</span></div>
+<div class="card"><b>💰 Price:</b> ${money(best.price)}</div>
+
+<div class="card"><b>🧠 Why this fits THIS track:</b><br>${why(best)}</div>
+
 <div class="card"><b>🔁 Alternatives:</b><br>
-${results[1].name} (${results[1].score})<br>
-${results[2].name} (${results[2].score})<br>
-${results[3].name} (${results[3].score})</div>
+${results[1].name} (${results[1].score}/100)<br>
+${results[2].name} (${results[2].score}/100)<br>
+${results[3].name} (${results[3].score}/100)
+</div>
 `;
 
 }
